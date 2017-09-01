@@ -1,5 +1,5 @@
 set nocompatible
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.config/nvim/plugins')
 
 " ----------------------------------------------
 " Define all the plugins!
@@ -54,9 +54,11 @@ Plug 'wellle/targets.vim'                                     " Add lots of extr
 Plug 'dhruvasagar/vim-table-mode'                             " Add some pretty powerful tools for creating ASCII tables
 
 " Autocomplete
-Plug 'ervandew/supertab'                                      " Make tab more useful in triggering Vim omni-complete
-Plug 'tpope/vim-ragtag'                                       " Provide bindings for closing HTML/XML tags
-Plug 'ajh17/VimCompletesMe'                                   " Very lightweight completion helper
+Plug 'roxma/nvim-completion-manager'                          " Add auto-complete
+Plug 'roxma/nvim-cm-tern',  {'do': 'npm install'}             " Auto-complete JS
+Plug 'roxma/ncm-rct-complete'                                 " Auto-complete Ruby
+Plug 'othree/csscomplete.vim'                                 " Auto-complete CSS
+Plug 'jiangmiao/auto-pairs'                                   " Auto add paired characters (and try not to be too annoying about it)
 Plug 'noahfrederick/vim-skeleton'                             " Use a template file when creating new files
 
 " Snippets
@@ -64,7 +66,7 @@ Plug 'SirVer/ultisnips'                                       " Add snippet expa
 Plug 'honza/vim-snippets'                                     " Add many popular shared snippets
 
 " Extra syntax highlighting and language support
-Plug 'scrooloose/syntastic'                                   " The Godfather of all syntax highlighting and checking
+Plug 'w0rp/ale'                                               " Syntax highlight & lint multiple languages as you type
 Plug 'sheerun/vim-polyglot'                                   " Currated group of other excellent plugins
 Plug 'niquola/vim-hl7',                {'for': 'hl7'}         " HL7 syntax highlighting
 Plug 'slashmili/alchemist.vim'                                " Hook into Elixir Alchemist server for better completions'
@@ -72,7 +74,7 @@ Plug 'janko-m/vim-test'                                       " Add test running
 
 " Ruby
 Plug 'tpope/vim-rbenv'                                        " Use rbenv for Ruby tools
-Plug 'tpope/vim-endwise',              {'for': 'ruby'}        " Automatically insert programming block endings (ie. `end` in Ruby, `endif` in VimL)
+Plug 'tpope/vim-endwise'                                      " Automatically end code blocks as inserted
 Plug 'ecomba/vim-ruby-refactoring',    {'for': 'ruby'}        " Extra Ruby refactoring tools
 Plug 'vim-scripts/rubycomplete.vim',   {'for': 'ruby'}        " Extend OmniComplete with live evaluated Ruby
 
@@ -84,12 +86,11 @@ Plug 'adamwhittingham/vim-comb',       {'do': './install.sh'} " Organise and for
 
 
 " Load any extra plugins specified in the home directory
-if filereadable(expand("~/.vim.plugins.local"))
-  source ~/.vim.plugins.local
+if filereadable(expand("~/.config/.nvim.plugins.local"))
+  source ~/.config/.nvim.plugins.local
 endif
 
 " No More plugins after here thanks!
-
 call plug#end()
 syntax on
 filetype on
@@ -118,20 +119,24 @@ endif
 
 set autoindent                          " Automatically indent based on syntax detection
 set autowrite                           " Writes on make/shell commands
+set background=dark
 set backspace=start,indent,eol
 set backupdir=/var/tmp,~/.tmp,.         " Don't clutter project dirs up with swap files
-set background=dark
-set directory=/var/tmp,~/.tmp,.
+set breakindent
 set cf                                  " Enable error files & error jumping.
 set complete+=kspell
 set cursorline                          " Hilight the line the cursor is on
+set directory=/var/tmp,~/.tmp,.
 set expandtab                           " Convert tabs to spaces AS IS RIGHT AND PROPER
+set fillchars+=vert:\                   " Set the window borders to not have | chars in them
+set formatoptions+=j
 set hidden                              " Allow buffer switching without saving
 set history=1000                        " Remember a decent way back
 set laststatus=2                        " Always show status line.
 set listchars=nbsp:█,eol:¶,tab:>-,extends:»,precedes:«,trail:•
 set mousehide                           " Hide the mouse cursor when typing
 set nofoldenable                        " Disable all folding of content
+set nojoinspaces                        " Use only 1 space after "." when joining lines instead of 2
 set nowrap                              " Line wrapping off
 set number                              " line numbers
 set ruler                               " Ruler on
@@ -139,33 +144,16 @@ set scrolloff=3                         " More context around cursor
 set sessionoptions=blank,buffers,curdir,folds,help,resize,tabpages,winsize
 set shiftwidth=2
 set shortmess+=A
+set showbreak=↪
 set smarttab
 set spelllang=en_gb
-set statusline=%<%f\ %h%m%r%=%-20.(line=%l\ of\ %L,col=%c%V%)\%h%m%r%=%-40(,%n%Y%)\%P%#warningmsg#%{SyntasticStatuslineFlag()}%*
-set t_Co=256                            " Set 256 colour mode
-set tabstop=2                           " Make a tab = 2 spaces
+set statusline=%<%f\ %h%m%r%=%-20.(line=%l\ of\ %L,col=%c%V%)\%h%m%r%=%-40(,%n%Y%)\%P%#warningmsg#%*
+set tabstop=2
 set timeoutlen=500                      " Milliseconds to wait for another key press when evaluating commands
 set wildmode=list:longest               " Shell-like behaviour for command autocompletion
-set fillchars+=vert:\                   " Set the window borders to not have | chars in them
-set nojoinspaces                        " Use only 1 space after "." when joining lines instead of 2
-set signcolumn=yes                      " Show signcolumn all the time to avoid it popping in when gitgutter wakes up
+set signcolumn=yes                      " Show git gutter
 
-" Display soft column limit in modern versions of vim
-if version >= 730
-  au WinEnter,FileType * set cc=
-  au WinEnter,FileType ruby,eruby,rspec,cucumber set cc=140
-endif
-
-" Show lines which have been break-indented with a special character
-if v:version > 704 || v:version == 704 && has("patch338")
-  set breakindent
-  set showbreak=↪
-endif
-
-" Delete comment character when joining commented lines
- if v:version > 703 || v:version == 703 && has("patch541")
-   set formatoptions+=j
- endif
+au WinEnter,FileType * set cc=          " Disable the red column at 80 characters
 
 " -----------------------------------
 " Setup file wildcard ignored names
@@ -258,6 +246,9 @@ command! Qa :qa
 
 " make Y consistent with C and D
 nnoremap Y y$
+
+" Add jk as an escape sequence
+imap jk <esc>
 
 " <leader>. to view all document buffers
 nmap <silent> <unique> <Leader>. :BufExplorer<CR>
@@ -435,10 +426,14 @@ map <C-w>s :vsplit<CR>
 " C-w S to horizontal split
 map <C-w>S :split<CR>
 
-" C-H and C-L to jump left and right between splits
+" C-h and C-l to jump left and right between splits
 map <C-h> <C-w>h
 map <C-l> <C-w>l
-"
+
+" Add a hack to fix c-h in tmux + nvim on macOS
+" See the [tmux navigator](https://github.com/christoomey/vim-tmux-navigator) readme for more
+nnoremap <silent> <BS> :TmuxNavigateLeft<cr>
+
 " C-J and C-K to jump down and up between splits
 map <C-j> <C-w>j
 map <C-k> <C-w>k
@@ -446,7 +441,6 @@ map <C-k> <C-w>k
 let g:yankstack_map_keys = 0
 nmap <leader>p <Plug>yankstack_substitute_older_paste
 nmap <leader>P <Plug>yankstack_substitute_newer_paste
-
 
 " ----------------------------------------------
 " Map Uncommon Filetype for Syntax Highlighting
@@ -480,34 +474,20 @@ let g:ansible_options = {'ignore_blank_lines': 0}
 autocmd FileType make set noexpandtab
 
 " RUBY -------------------------------------
-" xmp-filter mappings
-autocmd FileType ruby nmap <buffer> <Leader>X <Plug>(xmpfilter-mark)
-autocmd FileType ruby xmap <buffer> <Leader>X <Plug>(xmpfilter-mark)
-autocmd FileType ruby imap <buffer> <Leader>X <Plug>(xmpfilter-mark)
-
-autocmd FileType ruby nmap <buffer> <Leader>x <Plug>(xmpfilter-run)
-autocmd FileType ruby xmap <buffer> <Leader>x <Plug>(xmpfilter-run)
-autocmd FileType ruby imap <buffer> <Leader>x <Plug>(xmpfilter-run)
-
 " Extend % to do/end etc
 runtime! plugin/matchit.vim
-
-" Fix supertab/endwise incompatibility
-let g:SuperTabCrMapping = 0
-
-" HTML & XML -------------------------------------
-" Don't report Angular ng-* attributes as errors in HTML
-let g:syntastic_html_tidy_ignore_errors=[" proprietary attribute \"ng-"]
 
 " Enable ragtag XML tag mappings
 let g:ragtag_global_maps = 1
 
 
 " ----------------------------------------------
-" Auto-complete shortcuts
+" Auto-complete
 " ----------------------------------------------
+let g:deoplete#enable_at_startup = 1
 
 " Enable omni completion.
+autocmd FileType ruby,eruby setlocal omnifunc=rubycomplete#Complete
 autocmd FileType c setlocal omnifunc=ccomplete#CompleteCpp
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
@@ -518,12 +498,32 @@ autocmd FileType ruby,eruby let g:rubycomplete_classes_in_global = 1
 autocmd FileType ruby,eruby setlocal omnifunc=rubycomplete#Complete
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
-" Setup autocompletion lookups for VimCompletesMe
-autocmd FileType text,markdown let b:vcm_tab_complete = 'dict'
-autocmd FileType ruby,elixir let b:vcm_tab_complete = 'tags'
+" Disable AutoComplPop.
+let g:acp_enableAtStartup = 0
+
+" Recommended key-mappings.
+" <CR>: close popup and save indent.
+inoremap <silent> <CR> <C-r>=<SID>my_cr_function()<CR>
+function! s:my_cr_function()
+  return (pumvisible() ? "\<C-y>" : "" ) . "\<CR>"
+  " For no inserting <CR> key.
+  "return pumvisible() ? "\<C-y>" : "\<CR>"
+endfunction
+
+" <TAB>: completion.
+inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
+" Enable omni completion.
+autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
 
 " better key bindings for UltiSnipsExpandTrigger
-let g:UltiSnipsExpandTrigger = "<C-j>"
+let g:UltiSnipsExpandTrigger = "<C-x>"
 let g:UltiSnipsJumpForwardTrigger = "<tab>"
 let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
 
@@ -622,7 +622,7 @@ let g:startify_skiplist = [
       \ ]
 
 let g:startify_bookmarks = [
-      \ { 'v': '~/.vim/vimrc' },
+      \ { 'v': '~/.config/nvim/init.vim' },
       \ { 't': '/tmp/foo.txt' },
       \ ]
 
@@ -644,6 +644,7 @@ if executable('ag')
   let g:ctrlp_use_caching = 0
 endif
 
+
 " ----------------------------------------------
 " Setup SplitJoin
 " ----------------------------------------------
@@ -651,19 +652,6 @@ endif
 " Attempt alignment of keys when splitting a hash
 let g:splitjoin_align = 1
 
-
-" ----------------------------------------------
-" Configure GitGutter
-" ----------------------------------------------
-" Set the git gutter colors to be the same as the number column
-hi clear SignColumn
-
-" Set the Gutter to show all the time, avoiding the column 'pop' when saving
-let g:gitgutter_sign_added = '+'
-let g:gitgutter_sign_modified = '~'
-let g:gitgutter_sign_removed = '-'
-let g:gitgutter_sign_modified_removed = '~'
-let g:gitgutter_max_signs = 1000
 
 
 " ----------------------------------------------
@@ -707,15 +695,30 @@ let g:projectionist_heuristics ={
 
 
 " ----------------------------------------------
+" Setup ALE linting tools
+" ----------------------------------------------
+
+let g:ale_sign_error = '⚠'
+let g:ale_sign_warning = '⚠'
+let g:ale_sign_column_always = 1      " Always show the sign column to avoid annoying popping in
+let g:ale_lint_delay = 1000           " Lint at most once per second incase we're on battery power
+
+highlight clear ALEErrorSign
+highlight clear ALEWarningSign
+
+hi ALEErrorSign   guibg=#501010 ctermbg=52 guifg=#FD3F44 ctermfg=203
+hi ALEWarningSign guibg=#503010 ctermbg=58 guifg=#FF9800 ctermfg=208
+
+" ----------------------------------------------
 " Setup customer Switch changes
 " ----------------------------------------------
 
 
 let g:switch_custom_definitions =
-    \ [
-    \   ['X', '✔', '✕'],
-    \   ['yes', 'no']
-    \ ]
+      \ [
+      \   ['X', '✔', '✕'],
+      \   ['yes', 'no']
+      \ ]
 
 " ----------------------------------------------
 " Setup the status bar
@@ -744,17 +747,6 @@ let g:airline_theme = "kalisi"
 " ----------------------------------------------
 let g:bufExplorerDefaultHelp=1
 let g:bufExplorerDisableDefaultKeyMapping=1
-
-
-" ----------------------------------------------
-" Setup Syntastic
-" ----------------------------------------------
-let g:syntastic_enable_signs=1
-let g:syntastic_auto_loc_list=1
-
-if executable('eslint')
-  let g:syntastic_javascript_checkers = ['eslint']
-endif
 
 
 " ----------------------------------------------
@@ -821,109 +813,16 @@ let g:tagbar_type_ruby = {
 " A whole bunch of NERDTree configuration stolen from carlhuda's janus
 let NERDTreeIgnore=['\.rbc$', '\~$']
 
-" Make NERDTree close when you open a file from it. Helps recover screen space!
+" Make NERDTree close when you open a file from it.
 let NERDTreeQuitOnOpen=1
 
-" Disable netrw's autocmd, since we're ALWAYS using NERDTree
+" Disable netrw's autocmd, since we're always using NERDTree
 runtime plugin/netRwPlugin.vim
 augroup FileExplorer
   au!
 augroup END
 
 let g:NERDTreeHijackNetrw = 0
-
-" If the parameter is a directory (or there was no parameter), open NERDTree
-function s:NERDTreeIfDirectory(directory)
-  if isdirectory(a:directory) || a:directory == ""
-    NERDTree
-  endif
-endfunction
-
-" If the parameter is a directory, cd into it
-function s:CdIfDirectory(directory)
-  if isdirectory(a:directory)
-    call ChangeDirectory(a:directory)
-  endif
-endfunction
-
-" NERDTree utility function
-function s:UpdateNERDTree(stay)
-  if exists("t:NERDTreeBufName")
-    if bufwinnr(t:NERDTreeBufName) != -1
-      NERDTree
-      if !a:stay
-        wincmd p
-      end
-    endif
-  endif
-endfunction
-
-" Utility functions to create file commands
-function s:CommandCabbr(abbreviation, expansion)
-  execute 'cabbrev ' . a:abbreviation . ' <c-r>=getcmdpos() == 1 && getcmdtype() == ":" ? "' . a:expansion . '" : "' . a:abbreviation . '"<CR>'
-endfunction
-
-function s:FileCommand(name, ...)
-  if exists("a:1")
-    let funcname = a:1
-  else
-    let funcname = a:name
-  endif
-
-  execute 'command -nargs=1 -complete=file ' . a:name . ' :call ' . funcname . '(<f-args>)'
-endfunction
-
-function s:DefineCommand(name, destination)
-  call s:FileCommand(a:destination)
-  call s:CommandCabbr(a:name, a:destination)
-endfunction
-
-" Public NERDTree-aware versions of builtin functions
-function ChangeDirectory(dir, ...)
-  execute "cd " . a:dir
-  let stay = exists("a:1") ? a:1 : 1
-  call s:UpdateNERDTree(stay)
-endfunction
-
-function Touch(file)
-  execute "!touch " . a:file
-  call s:UpdateNERDTree(1)
-endfunction
-
-function Remove(file)
-  let current_path = expand("%")
-  let removed_path = fnamemodify(a:file, ":p")
-
-  if (current_path == removed_path) && (getbufvar("%", "&modified"))
-    echo "You are trying to remove the file you are editing. Please close the buffer first."
-  else
-    execute "!rm " . a:file
-  endif
-endfunction
-
-function Edit(file)
-  if exists("b:NERDTreeRoot")
-    wincmd p
-  endif
-
-  execute "e " . a:file
-
-ruby << RUBY
-  destination = File.expand_path(VIM.evaluate(%{system("dirname " . a:file)}))
-  pwd         = File.expand_path(Dir.pwd)
-  home        = pwd == File.expand_path("~")
-
-  if home || Regexp.new("^" + Regexp.escape(pwd)) !~ destination
-    VIM.command(%{call ChangeDirectory(system("dirname " . a:file), 0)})
-  end
-RUBY
-endfunction
-
-" Define the NERDTree-aware aliases
-call s:DefineCommand("cd", "ChangeDirectory")
-call s:DefineCommand("touch", "Touch")
-call s:DefineCommand("rm", "Remove")
-
 
 " ----------------------------------------------
 " Setup filetype specific settings
@@ -937,6 +836,20 @@ autocmd BufNewFile,BufRead *.md :setlocal spell
 let g:ansible_options = {'ignore_blank_lines': 0}
 
 let g:javascript_enable_domhtmlcss = 1
+
+" ----------------------------------------------
+" Configure GitGutter
+" ----------------------------------------------
+" Set the git gutter colors to be the same as the number column
+hi clear SignColumn
+
+" Set the Gutter to show all the time, avoiding the column 'pop' when saving
+let g:gitgutter_sign_added = '+'
+let g:gitgutter_sign_modified = '~'
+let g:gitgutter_sign_removed = '-'
+let g:gitgutter_sign_modified_removed = '~'
+let g:gitgutter_max_signs = 1000
+
 
 " ----------------------------------------------
 " Configure Testing tools
