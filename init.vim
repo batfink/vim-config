@@ -804,6 +804,7 @@ let g:tagbar_type_ruby = {
 \     'a:associations',
 \     'r:relations',
 \     'h:callbacks',
+\     'i:tests',
 \   ]
 \ }
 
